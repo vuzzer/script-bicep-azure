@@ -23,21 +23,22 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
 }
 
 // creation app service
-resource webApp 'Microsoft.Web/sites@2024-04-01' = [ for app in webAppNameParams: {
+resource webApp 'Microsoft.Web/sites@2024-04-01' = [ for appIndex in range(0,length(webAppNameParams)): {
   location: location
-  name: 'wepapp-${app}-${uniqueString(resourceGroup().id)}'
+  name: 'wepapp-${webAppNameParams[appIndex]}-${uniqueString('${appIndex}-${webAppNameParams[appIndex]}',resourceGroup().id)}'
   properties:{
     serverFarmId: appServicePlan.id
   }
   tags:{
-    Application: 'wepapp-${app}-${uniqueString(resourceGroup().id)}'
+    Application: 'wepapp-${webAppNameParams[appIndex]}-${uniqueString('${appIndex}-${webAppNameParams[appIndex]}',resourceGroup().id)}'
   }
 }]
 
 // creation slot lorsque le plan est S1
 resource slots 'Microsoft.Web/sites/slots@2024-04-01' = [for index in range(0, length(webAppNameParams)):  if (plan == 'S1')  {
   location: location
-  name: '${webApp[index].name}/staging'
+  name: 'staging'
+  parent: webApp[index]
   properties:{
     serverFarmId: webApp[index].properties.serverFarmId
   }
